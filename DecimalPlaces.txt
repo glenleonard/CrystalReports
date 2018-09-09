@@ -1,0 +1,43 @@
+Local NumberVar qty_order := Maximum (MakeArray({V_PRT_LASER_INVOICE.QTY_ORDER},{V_PRT_LASER_INVOICE.QTY_ORDER_2},{V_PRT_LASER_INVOICE.QTY_ORDER_4}));
+Local NumberVar qty_ship := Maximum (MakeArray({V_PRT_LASER_INVOICE.QTY_SHIPPED},{V_PRT_LASER_INVOICE.QTY_SHIPPED_2},{V_PRT_LASER_INVOICE.QTY_SHIPPED_4}));
+Local NumberVar qty_used;
+
+// For Credit Memo
+IF {V_PRT_LASER_INVOICE.FORM_TITLE} = "CREDIT MEMO" THEN
+    IF qty_ship <> 0 THEN
+        qty_used := qty_ship
+    ELSE qty_used := 0
+ELSE
+// For Invoice, show shipped quantity in preference to ordered
+   IF qty_order > qty_ship THEN
+        qty_used := qty_ship
+   ELSE IF qty_order = 0 THEN qty_used := 0 
+   ELSE qty_used := qty_order
+;
+// To trim any trailing zeroes off the quantity, reverse the string, iterate through the string
+// trimming off zeroes and the point, then reverse the string to return
+Local StringVar str_qty := ToText(qty_used);
+Local NumberVar strlen := Len(str_qty);
+Local StringVar str_ret := "";
+Local StringVar str_hold;
+Local NumberVar i;
+
+str_ret := str_ret + StrReverse(str_qty);
+
+For i := 1 To strlen Do
+(
+    str_hold := str_ret[1];
+
+    If str_hold = "0" Or str_hold = "." Then
+        str_ret := Mid(str_ret,2);
+ 
+    If str_hold = "." Then
+        Exit For;
+ 
+    i = i + 1;    
+)
+;
+
+str_ret := StrReverse(str_ret);
+
+str_ret
